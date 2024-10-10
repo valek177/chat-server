@@ -16,7 +16,7 @@ service ChatV1 {
 
 message CreateChatRequest {
   string name = 1;
-  repeated string usernames = 2;
+  repeated int64 user_ids = 2;
 }
 
 message CreateChatResponse {

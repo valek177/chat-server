@@ -6,12 +6,12 @@ import (
 	"log"
 	"net"
 
-	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
-
 	"github.com/brianvoe/gofakeit"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
 )
 
 const grpcPort = 50051
@@ -43,10 +43,8 @@ func (s *server) CreateChat(_ context.Context, req *chat_v1.CreateChatRequest) (
 ) {
 	log.Printf("Create new chat with name %s", req.GetName())
 
-	id := gofakeit.Int64()
-
 	return &chat_v1.CreateChatResponse{
-		Id: id,
+		Id: gofakeit.Int64(),
 	}, nil
 }
 
