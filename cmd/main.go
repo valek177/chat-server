@@ -5,9 +5,11 @@ import (
 	"flag"
 	"log"
 	"net"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -30,7 +32,8 @@ type server struct {
 
 func main() {
 	flag.Parse()
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
 	err := config.Load(configPath)
 	if err != nil {
@@ -83,13 +86,13 @@ func (s *server) CreateChat(ctx context.Context, req *chat_v1.CreateChatRequest)
 
 	query, args, err := builderInsert.ToSql()
 	if err != nil {
-		log.Fatalf("failed to build query: %v", err)
+		return nil, errors.Errorf("failed to build query: %v", err)
 	}
 
 	var chatID int64
 	err = s.pool.QueryRow(ctx, query, args...).Scan(&chatID)
 	if err != nil {
-		log.Fatalf("failed to insert chats: %v", err)
+		return nil, errors.Errorf("failed to insert chats: %v", err)
 	}
 
 	log.Printf("inserted chat with id: %d", chatID)
@@ -110,7 +113,7 @@ func (s *server) CreateChat(ctx context.Context, req *chat_v1.CreateChatRequest)
 
 	_, err = s.pool.Exec(ctx, query, args...)
 	if err != nil {
-		log.Fatalf("failed to insert chat users: %v", err)
+		return nil, errors.Errorf("failed to insert chat users: %v", err)
 	}
 
 	return &chat_v1.CreateChatResponse{
@@ -131,12 +134,12 @@ func (s *server) DeleteChat(ctx context.Context, req *chat_v1.DeleteChatRequest)
 
 	query, args, err := builderDelete.ToSql()
 	if err != nil {
-		log.Fatalf("failed to build query: %v", err)
+		return nil, errors.Errorf("failed to build query: %v", err)
 	}
 
 	_, err = s.pool.Exec(ctx, query, args...)
 	if err != nil {
-		log.Printf("failed to delete chat user: %v", err)
+		return nil, errors.Errorf("failed to delete chat user: %v", err)
 	}
 
 	log.Printf("Delete chat for chat id %d", id)
@@ -147,7 +150,7 @@ func (s *server) DeleteChat(ctx context.Context, req *chat_v1.DeleteChatRequest)
 
 	query, args, err = builderChatDelete.ToSql()
 	if err != nil {
-		log.Fatalf("failed to build query: %v", err)
+		return nil, errors.Errorf("failed to build query: %v", err)
 	}
 
 	_, err = s.pool.Exec(ctx, query, args...)
