@@ -12,6 +12,7 @@ import (
 	"github.com/valek177/chat-server/internal/config/env"
 	"github.com/valek177/chat-server/internal/repository"
 	chatRepository "github.com/valek177/chat-server/internal/repository/chat"
+	logRepo "github.com/valek177/chat-server/internal/repository/log"
 	"github.com/valek177/chat-server/internal/service"
 	chatService "github.com/valek177/chat-server/internal/service/chat"
 )
@@ -23,6 +24,7 @@ type serviceProvider struct {
 	dbClient       db.Client
 	txManager      db.TxManager
 	chatRepository repository.ChatRepository
+	logRepository  repository.LogRepository
 
 	chatService service.ChatService
 
@@ -111,10 +113,27 @@ func (s *serviceProvider) ChatRepository(ctx context.Context) (repository.ChatRe
 	return s.chatRepository, nil
 }
 
+// LogRepository returns new LogRepository
+func (s *serviceProvider) LogRepository(ctx context.Context) (repository.LogRepository, error) {
+	if s.logRepository == nil {
+		dbClient, err := s.DBClient(ctx)
+		if err != nil {
+			return nil, err
+		}
+		s.logRepository = logRepo.NewRepository(dbClient)
+	}
+
+	return s.logRepository, nil
+}
+
 // ChatService returns new ChatService
 func (s *serviceProvider) ChatService(ctx context.Context) (service.ChatService, error) {
 	if s.chatService == nil {
 		chatRepo, err := s.ChatRepository(ctx)
+		if err != nil {
+			return nil, err
+		}
+		logRepo, err := s.LogRepository(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -123,7 +142,7 @@ func (s *serviceProvider) ChatService(ctx context.Context) (service.ChatService,
 			return nil, err
 		}
 		s.chatService = chatService.NewService(
-			chatRepo, txManager,
+			chatRepo, logRepo, txManager,
 		)
 	}
 

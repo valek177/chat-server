@@ -113,7 +113,7 @@ func (r *repo) createChatUsers(ctx context.Context, req *chat_v1.CreateChatReque
 }
 
 func (r *repo) deleteChatUsers(ctx context.Context, id int64) error {
-	builderDelete := sq.Delete("chat_users").
+	builderDelete := sq.Delete(tableChatsUsersName).
 		PlaceholderFormat(sq.Dollar).
 		Where(sq.Eq{chatIdColumn: id})
 
@@ -136,7 +136,7 @@ func (r *repo) deleteChatUsers(ctx context.Context, id int64) error {
 }
 
 func (r *repo) deleteChat(ctx context.Context, id int64) error {
-	builderChatDelete := sq.Delete("chats").
+	builderChatDelete := sq.Delete(tableChatsName).
 		PlaceholderFormat(sq.Dollar).
 		Where(sq.Eq{idColumn: id})
 
