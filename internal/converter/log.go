@@ -7,9 +7,9 @@ import (
 )
 
 // ToRecordRepoFromService converts params to Record model
-func ToRecordRepoFromService(chatId int64, action string) *model.Record {
+func ToRecordRepoFromService(chatID int64, action string) *model.Record {
 	return &model.Record{
-		ChatID:    chatId,
+		ChatID:    chatID,
 		CreatedAt: time.Now(),
 		Action:    action,
 	}

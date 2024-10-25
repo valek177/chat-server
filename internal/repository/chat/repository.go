@@ -1,4 +1,4 @@
-package auth
+package chat
 
 import (
 	"context"
@@ -15,8 +15,8 @@ const (
 	tableChatsUsersName = "chat_users"
 
 	idColumn     = "id"
-	chatIdColumn = "chat_id"
-	userIdColumn = "user_id"
+	chatIDColumn = "chat_id"
+	userIDColumn = "user_id"
 	nameColumn   = "name"
 )
 
@@ -88,7 +88,7 @@ func (r *repo) createNewChat(ctx context.Context, req *chat_v1.CreateChatRequest
 func (r *repo) createChatUsers(ctx context.Context, req *chat_v1.CreateChatRequest, chatID int64) error {
 	builderInsertChatUser := sq.Insert(tableChatsUsersName).
 		PlaceholderFormat(sq.Dollar).
-		Columns(userIdColumn, chatIdColumn)
+		Columns(userIDColumn, chatIDColumn)
 
 	for _, id := range req.UserIds {
 		builderInsertChatUser = builderInsertChatUser.Values(id, chatID)
@@ -115,7 +115,7 @@ func (r *repo) createChatUsers(ctx context.Context, req *chat_v1.CreateChatReque
 func (r *repo) deleteChatUsers(ctx context.Context, id int64) error {
 	builderDelete := sq.Delete(tableChatsUsersName).
 		PlaceholderFormat(sq.Dollar).
-		Where(sq.Eq{chatIdColumn: id})
+		Where(sq.Eq{chatIDColumn: id})
 
 	query, args, err := builderDelete.ToSql()
 	if err != nil {

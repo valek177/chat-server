@@ -15,7 +15,7 @@ const (
 	tableName = "chats_log"
 
 	idColumn        = "id"
-	chatIdColumn    = "chat_id"
+	chatIDColumn    = "chat_id"
 	actionColumn    = "action"
 	createdAtColumn = "created_at"
 )
@@ -32,7 +32,7 @@ func NewRepository(db db.Client) repository.LogRepository {
 // CreateRecord creates new record in chats log table
 func (r *repo) CreateRecord(ctx context.Context, record *model.Record) (int64, error) {
 	builderInsert := sq.Insert(tableName).
-		Columns(chatIdColumn, actionColumn, createdAtColumn).
+		Columns(chatIDColumn, actionColumn, createdAtColumn).
 		Values(record.ChatID, record.Action, time.Now()).
 		PlaceholderFormat(sq.Dollar).
 		Suffix("RETURNING id")
@@ -47,10 +47,10 @@ func (r *repo) CreateRecord(ctx context.Context, record *model.Record) (int64, e
 		QueryRaw: query,
 	}
 
-	var recordId int64
-	if err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&recordId); err != nil {
+	var recordID int64
+	if err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&recordID); err != nil {
 		return 0, err
 	}
 
-	return recordId, nil
+	return recordID, nil
 }
