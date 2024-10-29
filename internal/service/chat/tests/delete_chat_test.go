@@ -34,7 +34,6 @@ func TestDeleteChat(t *testing.T) {
 		mc  = minimock.NewController(t)
 
 		id = int64(342)
-		// recordId = int64(200)
 
 		repoErr = fmt.Errorf("repo error")
 
@@ -42,28 +41,8 @@ func TestDeleteChat(t *testing.T) {
 			Id: id,
 		}
 
-		// record = &model.Record{
-		// 	ID:     recordId,
-		// 	ChatID: id,
-		// 	Action: "delete",
-		// }
-
 		res = &emptypb.Empty{}
 	)
-
-	chatRepoFunc := func(mc *minimock.Controller) repository.ChatRepository {
-		mock := repoMocks.NewChatRepositoryMock(mc)
-		mock.DeleteChatMock.Expect(ctx, id).Return(nil)
-		return mock
-	}
-
-	logRepoFunc := func(mc *minimock.Controller) repository.LogRepository {
-		mock := repoMocks.NewLogRepositoryMock(mc)
-		mock.CreateRecordMock.Set(func(ctx context.Context, model *model.Record) (int64, error) {
-			return 0, nil
-		})
-		return mock
-	}
 
 	txManagerFunc := func(mc *minimock.Controller) db.TxManager {
 		mock := dbMocks.NewTxManagerMock(mc)
@@ -82,16 +61,28 @@ func TestDeleteChat(t *testing.T) {
 		txManagerMock      txManagerMockFunc
 	}{
 		{
-			name: "success case 1",
+			name: "success case",
 			args: args{
 				ctx: ctx,
 				req: req,
 			},
-			want:               res,
-			err:                nil,
-			chatRepositoryMock: chatRepoFunc,
-			logRepositoryMock:  logRepoFunc,
-			txManagerMock:      txManagerFunc,
+			want: res,
+			err:  nil,
+			chatRepositoryMock: func(mc *minimock.Controller) repository.ChatRepository {
+				mock := repoMocks.NewChatRepositoryMock(mc)
+				mock.DeleteChatMock.Expect(ctx, id).Return(nil)
+				return mock
+			},
+			logRepositoryMock: func(mc *minimock.Controller) repository.LogRepository {
+				mock := repoMocks.NewLogRepositoryMock(mc)
+				mock.CreateRecordMock.Set(func(ctx context.Context,
+					model *model.Record,
+				) (int64, error) {
+					return 0, nil
+				})
+				return mock
+			},
+			txManagerMock: txManagerFunc,
 		},
 	}
 
@@ -105,7 +96,7 @@ func TestDeleteChat(t *testing.T) {
 		txManagerMock      txManagerMockFunc
 	}{
 		{
-			name: "repo error case 1",
+			name: "repo error",
 			args: args{
 				ctx: ctx,
 				req: req,
@@ -120,6 +111,30 @@ func TestDeleteChat(t *testing.T) {
 			},
 			logRepositoryMock: func(mc *minimock.Controller) repository.LogRepository {
 				mock := repoMocks.NewLogRepositoryMock(mc)
+				return mock
+			},
+			txManagerMock: txManagerFunc,
+		},
+		{
+			name: "log error",
+			args: args{
+				ctx: ctx,
+				req: req,
+			},
+			want: nil,
+			err:  fmt.Errorf("log error"),
+			chatRepositoryMock: func(mc *minimock.Controller) repository.ChatRepository {
+				mock := repoMocks.NewChatRepositoryMock(mc)
+				mock.DeleteChatMock.Expect(ctx, id).Return(nil)
+				return mock
+			},
+			logRepositoryMock: func(mc *minimock.Controller) repository.LogRepository {
+				mock := repoMocks.NewLogRepositoryMock(mc)
+				mock.CreateRecordMock.Set(func(ctx context.Context,
+					model *model.Record,
+				) (int64, error) {
+					return 0, fmt.Errorf("log error")
+				})
 				return mock
 			},
 			txManagerMock: txManagerFunc,
@@ -160,7 +175,7 @@ func TestDeleteChat(t *testing.T) {
 
 			err := service.DeleteChat(tt.args.ctx, tt.args.req.Id)
 			assert.NotNil(t, err)
-			assert.ErrorContains(t, err, "repo error")
+			assert.ErrorContains(t, err, tt.err.Error())
 		})
 	}
 }

@@ -47,7 +47,7 @@ func TestDeleteChat(t *testing.T) {
 		chatServiceMock chatServiceMockFunc
 	}{
 		{
-			name: "success case 1",
+			name: "success case",
 			args: args{
 				ctx: ctx,
 				req: req,
@@ -69,7 +69,7 @@ func TestDeleteChat(t *testing.T) {
 		chatServiceMock chatServiceMockFunc
 	}{
 		{
-			name: "service error case 1",
+			name: "service error",
 			args: args{
 				ctx: ctx,
 				req: req,
