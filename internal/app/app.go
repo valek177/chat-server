@@ -11,8 +11,8 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
-	"github.com/valek177/chat-server/internal/closer"
 	"github.com/valek177/chat-server/internal/config"
+	"github.com/valek177/platform-common/pkg/closer"
 )
 
 var configPath string

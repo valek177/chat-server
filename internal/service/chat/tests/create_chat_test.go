@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
-	"github.com/valek177/chat-server/internal/client/db"
-	dbMocks "github.com/valek177/chat-server/internal/client/db/mocks"
 	"github.com/valek177/chat-server/internal/model"
 	"github.com/valek177/chat-server/internal/repository"
 	repoMocks "github.com/valek177/chat-server/internal/repository/mocks"
 	"github.com/valek177/chat-server/internal/service/chat"
+	"github.com/valek177/platform-common/pkg/client/db"
+	dbMocks "github.com/valek177/platform-common/pkg/client/db/mocks"
 )
 
 func TestCreateChat(t *testing.T) {

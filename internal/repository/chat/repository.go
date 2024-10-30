@@ -6,8 +6,8 @@ import (
 	sq "github.com/Masterminds/squirrel"
 
 	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
-	"github.com/valek177/chat-server/internal/client/db"
 	"github.com/valek177/chat-server/internal/repository"
+	"github.com/valek177/platform-common/pkg/client/db"
 )
 
 const (
