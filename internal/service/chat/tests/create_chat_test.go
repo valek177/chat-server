@@ -35,13 +35,13 @@ func TestCreateChat(t *testing.T) {
 
 		id      = int64(342)
 		name    = gofakeit.Name()
-		userIds = []int64{1, 2, 3}
+		userIDs = []int64{1, 2, 3}
 
 		repoErr = fmt.Errorf("repo error")
 
 		req = &chat_v1.CreateChatRequest{
 			Name:    name,
-			UserIds: userIds,
+			UserIds: userIDs,
 		}
 
 		res = &chat_v1.CreateChatResponse{
@@ -80,8 +80,8 @@ func TestCreateChat(t *testing.T) {
 			},
 			logRepositoryMock: func(mc *minimock.Controller) repository.LogRepository {
 				mock := repoMocks.NewLogRepositoryMock(mc)
-				mock.CreateRecordMock.Set(func(ctx context.Context,
-					model *model.Record,
+				mock.CreateRecordMock.Set(func(_ context.Context,
+					_ *model.Record,
 				) (int64, error) {
 					return 0, nil
 				})
@@ -133,8 +133,8 @@ func TestCreateChat(t *testing.T) {
 			},
 			logRepositoryMock: func(mc *minimock.Controller) repository.LogRepository {
 				mock := repoMocks.NewLogRepositoryMock(mc)
-				mock.CreateRecordMock.Set(func(ctx context.Context,
-					model *model.Record,
+				mock.CreateRecordMock.Set(func(_ context.Context,
+					_ *model.Record,
 				) (int64, error) {
 					return 0, fmt.Errorf("log error")
 				})

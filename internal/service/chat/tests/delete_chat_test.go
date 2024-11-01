@@ -75,8 +75,8 @@ func TestDeleteChat(t *testing.T) {
 			},
 			logRepositoryMock: func(mc *minimock.Controller) repository.LogRepository {
 				mock := repoMocks.NewLogRepositoryMock(mc)
-				mock.CreateRecordMock.Set(func(ctx context.Context,
-					model *model.Record,
+				mock.CreateRecordMock.Set(func(_ context.Context,
+					_ *model.Record,
 				) (int64, error) {
 					return 0, nil
 				})
@@ -130,8 +130,8 @@ func TestDeleteChat(t *testing.T) {
 			},
 			logRepositoryMock: func(mc *minimock.Controller) repository.LogRepository {
 				mock := repoMocks.NewLogRepositoryMock(mc)
-				mock.CreateRecordMock.Set(func(ctx context.Context,
-					model *model.Record,
+				mock.CreateRecordMock.Set(func(_ context.Context,
+					_ *model.Record,
 				) (int64, error) {
 					return 0, fmt.Errorf("log error")
 				})

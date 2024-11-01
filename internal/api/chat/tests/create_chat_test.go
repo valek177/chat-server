@@ -30,13 +30,13 @@ func TestCreateChat(t *testing.T) {
 
 		id      = int64(342)
 		name    = gofakeit.Name()
-		userIds = []int64{1, 2, 3}
+		userIDs = []int64{1, 2, 3}
 
 		serviceErr = fmt.Errorf("service error")
 
 		req = &chat_v1.CreateChatRequest{
 			Name:    name,
-			UserIds: userIds,
+			UserIds: userIDs,
 		}
 
 		res = &chat_v1.CreateChatResponse{
