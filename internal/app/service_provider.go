@@ -4,10 +4,6 @@ import (
 	"context"
 
 	"github.com/valek177/chat-server/internal/api/chat"
-	"github.com/valek177/chat-server/internal/client/db"
-	"github.com/valek177/chat-server/internal/client/db/pg"
-	"github.com/valek177/chat-server/internal/client/db/transaction"
-	"github.com/valek177/chat-server/internal/closer"
 	"github.com/valek177/chat-server/internal/config"
 	"github.com/valek177/chat-server/internal/config/env"
 	"github.com/valek177/chat-server/internal/repository"
@@ -15,6 +11,10 @@ import (
 	logRepo "github.com/valek177/chat-server/internal/repository/log"
 	"github.com/valek177/chat-server/internal/service"
 	chatService "github.com/valek177/chat-server/internal/service/chat"
+	"github.com/valek177/platform-common/pkg/client/db"
+	"github.com/valek177/platform-common/pkg/client/db/pg"
+	"github.com/valek177/platform-common/pkg/client/db/transaction"
+	"github.com/valek177/platform-common/pkg/closer"
 )
 
 type serviceProvider struct {
