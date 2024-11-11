@@ -17,6 +17,8 @@ func Load(path string) error {
 // GRPCConfig interface for GRPCConfig
 type GRPCConfig interface {
 	Address() string
+	TlsCertFile() string
+	TlsKeyFile() string
 }
 
 // PGConfig interface for PGConfig

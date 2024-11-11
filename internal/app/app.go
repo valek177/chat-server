@@ -7,7 +7,7 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 
 	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
@@ -83,7 +83,17 @@ func (a *App) initServiceProvider(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	a.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+	grpcCfg, err := a.serviceProvider.GRPCConfig()
+	if err != nil {
+		return err
+	}
+
+	creds, err := credentials.NewServerTLSFromFile(grpcCfg.TlsCertFile(), grpcCfg.TlsKeyFile())
+	if err != nil {
+		return err
+	}
+
+	a.grpcServer = grpc.NewServer(grpc.Creds(creds))
 
 	reflection.Register(a.grpcServer)
 
