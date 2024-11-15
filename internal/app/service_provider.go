@@ -3,7 +3,11 @@ package app
 import (
 	"context"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
 	"github.com/valek177/chat-server/internal/api/chat"
+	"github.com/valek177/chat-server/internal/client"
 	"github.com/valek177/chat-server/internal/config"
 	"github.com/valek177/chat-server/internal/config/env"
 	"github.com/valek177/chat-server/internal/repository"
@@ -25,6 +29,10 @@ type serviceProvider struct {
 	txManager      db.TxManager
 	chatRepository repository.ChatRepository
 	logRepository  repository.LogRepository
+
+	authClient client.AuthClient
+
+	authConn *grpc.ClientConn
 
 	chatService service.ChatService
 
@@ -160,4 +168,33 @@ func (s *serviceProvider) ChatImpl(ctx context.Context) (*chat.Implementation, e
 	}
 
 	return s.chatImpl, nil
+}
+
+func (s *serviceProvider) AuthClient() (client.AuthClient, error) {
+	if s.authClient == nil {
+		authConn, err := s.AuthConnection()
+		if err != nil {
+			return nil, err
+		}
+		s.authClient = client.NewAuthClient(authConn)
+	}
+
+	return s.authClient, nil
+}
+
+func (s *serviceProvider) AuthConnection() (*grpc.ClientConn, error) {
+	if s.authConn == nil {
+		var err error
+		creds := insecure.NewCredentials()
+		conn, err := grpc.NewClient("127.0.0.1:50061", grpc.WithTransportCredentials(creds))
+		if err != nil {
+			return nil, err
+		}
+
+		closer.Add(conn.Close)
+
+		s.authConn = conn
+	}
+
+	return s.authConn, nil
 }

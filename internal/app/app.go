@@ -12,6 +12,7 @@ import (
 
 	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
 	"github.com/valek177/chat-server/internal/config"
+	"github.com/valek177/chat-server/internal/interceptor"
 	"github.com/valek177/platform-common/pkg/closer"
 )
 
@@ -93,7 +94,17 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 		return err
 	}
 
-	a.grpcServer = grpc.NewServer(grpc.Creds(creds))
+	client, err := a.serviceProvider.AuthClient()
+	if err != nil {
+		return err
+	}
+
+	auth := interceptor.NewAuthInterceptor(client)
+
+	a.grpcServer = grpc.NewServer(
+		grpc.Creds(creds),
+		grpc.UnaryInterceptor(auth.Interceptor(ctx)),
+	)
 
 	reflection.Register(a.grpcServer)
 
