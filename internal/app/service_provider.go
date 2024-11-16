@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/valek177/chat-server/internal/api/chat"
 	"github.com/valek177/chat-server/internal/client"
@@ -185,8 +185,16 @@ func (s *serviceProvider) AuthClient() (client.AuthClient, error) {
 func (s *serviceProvider) AuthConnection() (*grpc.ClientConn, error) {
 	if s.authConn == nil {
 		var err error
-		creds := insecure.NewCredentials()
-		conn, err := grpc.NewClient("127.0.0.1:50061", grpc.WithTransportCredentials(creds))
+		grpcCfg, err := s.GRPCConfig()
+		if err != nil {
+			return nil, err
+		}
+		creds, err := credentials.NewClientTLSFromFile(grpcCfg.TlsCertFile(), "")
+		if err != nil {
+			return nil, err
+		}
+		// servicePort := 50061
+		conn, err := grpc.NewClient("localhost:50061", grpc.WithTransportCredentials(creds))
 		if err != nil {
 			return nil, err
 		}
