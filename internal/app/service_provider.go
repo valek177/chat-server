@@ -7,13 +7,13 @@ import (
 	"google.golang.org/grpc/credentials"
 
 	"github.com/valek177/chat-server/internal/api/chat"
-	"github.com/valek177/chat-server/internal/client"
 	"github.com/valek177/chat-server/internal/config"
 	"github.com/valek177/chat-server/internal/config/env"
 	"github.com/valek177/chat-server/internal/repository"
 	chatRepository "github.com/valek177/chat-server/internal/repository/chat"
 	logRepo "github.com/valek177/chat-server/internal/repository/log"
 	"github.com/valek177/chat-server/internal/service"
+	"github.com/valek177/chat-server/internal/service/access"
 	chatService "github.com/valek177/chat-server/internal/service/chat"
 	"github.com/valek177/platform-common/pkg/client/db"
 	"github.com/valek177/platform-common/pkg/client/db/pg"
@@ -22,19 +22,20 @@ import (
 )
 
 type serviceProvider struct {
-	pgConfig   config.PGConfig
-	grpcConfig config.GRPCConfig
+	pgConfig       config.PGConfig
+	grpcConfig     config.GRPCConfig
+	grpcAuthConfig config.GRPCAuthConfig
 
 	dbClient       db.Client
 	txManager      db.TxManager
 	chatRepository repository.ChatRepository
 	logRepository  repository.LogRepository
 
-	authClient client.AuthClient
+	authClient access.AuthClient
+	authConn   *grpc.ClientConn
 
-	authConn *grpc.ClientConn
-
-	chatService service.ChatService
+	accessService service.AccessService
+	chatService   service.ChatService
 
 	chatImpl *chat.Implementation
 }
@@ -69,6 +70,20 @@ func (s *serviceProvider) GRPCConfig() (config.GRPCConfig, error) {
 	}
 
 	return s.grpcConfig, nil
+}
+
+// GRPCAuthConfig returns new GRPCAuthConfig
+func (s *serviceProvider) GRPCAuthConfig() (config.GRPCAuthConfig, error) {
+	if s.grpcAuthConfig == nil {
+		cfg, err := env.NewGRPCAuthConfig()
+		if err != nil {
+			return nil, err
+		}
+
+		s.grpcAuthConfig = cfg
+	}
+
+	return s.grpcAuthConfig, nil
 }
 
 // DBClient returns new db client
@@ -157,6 +172,15 @@ func (s *serviceProvider) ChatService(ctx context.Context) (service.ChatService,
 	return s.chatService, nil
 }
 
+// AccessService returns AccessService
+func (s *serviceProvider) AccessService(_ context.Context) (service.AccessService, error) {
+	if s.accessService == nil {
+		s.accessService = access.NewService()
+	}
+
+	return s.accessService, nil
+}
+
 // ChatImpl returns new Chat Service implementation
 func (s *serviceProvider) ChatImpl(ctx context.Context) (*chat.Implementation, error) {
 	if s.chatImpl == nil {
@@ -170,18 +194,24 @@ func (s *serviceProvider) ChatImpl(ctx context.Context) (*chat.Implementation, e
 	return s.chatImpl, nil
 }
 
-func (s *serviceProvider) AuthClient() (client.AuthClient, error) {
+// AuthClient returns AuthClient
+func (s *serviceProvider) AuthClient(ctx context.Context) (access.AuthClient, error) {
 	if s.authClient == nil {
 		authConn, err := s.AuthConnection()
 		if err != nil {
 			return nil, err
 		}
-		s.authClient = client.NewAuthClient(authConn)
+		accessService, err := s.AccessService(ctx)
+		if err != nil {
+			return nil, err
+		}
+		s.authClient = access.NewAuthClient(authConn, accessService)
 	}
 
 	return s.authClient, nil
 }
 
+// AuthConnection returns AuthConnection
 func (s *serviceProvider) AuthConnection() (*grpc.ClientConn, error) {
 	if s.authConn == nil {
 		var err error
@@ -189,12 +219,16 @@ func (s *serviceProvider) AuthConnection() (*grpc.ClientConn, error) {
 		if err != nil {
 			return nil, err
 		}
-		creds, err := credentials.NewClientTLSFromFile(grpcCfg.TlsCertFile(), "")
+		creds, err := credentials.NewClientTLSFromFile(grpcCfg.TLSCertFile(), "")
 		if err != nil {
 			return nil, err
 		}
-		// servicePort := 50061
-		conn, err := grpc.NewClient("localhost:50061", grpc.WithTransportCredentials(creds))
+		grpcAuthCfg, err := s.GRPCAuthConfig()
+		if err != nil {
+			return nil, err
+		}
+		conn, err := grpc.NewClient(grpcAuthCfg.Address(),
+			grpc.WithTransportCredentials(creds))
 		if err != nil {
 			return nil, err
 		}

@@ -6,28 +6,32 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/valek177/chat-server/internal/client"
+	"github.com/valek177/chat-server/internal/service/access"
 )
 
+// Auth is a struct for auth client
 type Auth struct {
-	authClient client.AuthClient
+	authClient access.AuthClient
 }
 
-func NewAuthInterceptor(authClient client.AuthClient) *Auth {
+// NewAuthInterceptor is interceptor for AuthClient
+func NewAuthInterceptor(authClient access.AuthClient) *Auth {
 	return &Auth{
 		authClient: authClient,
 	}
 }
 
-func (a *Auth) Interceptor(ctx context.Context) grpc.UnaryServerInterceptor {
+// Interceptor returns interceptor for AuthClient
+func (a *Auth) Interceptor(_ context.Context) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (resp any, err error) {
-		fmt.Println("unary interceptor ", info.FullMethod)
-		_, err = a.authClient.Check(ctx, info.FullMethod)
+		accessAllowed, err := a.authClient.IsAccessGranted(ctx, info.FullMethod)
 		if err != nil {
-			fmt.Println("err in interceptor ", err)
 			return nil, err
+		}
+		if !accessAllowed {
+			return nil, fmt.Errorf("access denied")
 		}
 
 		return handler(ctx, req)

@@ -17,11 +17,16 @@ func Load(path string) error {
 // GRPCConfig interface for GRPCConfig
 type GRPCConfig interface {
 	Address() string
-	TlsCertFile() string
-	TlsKeyFile() string
+	TLSCertFile() string
+	TLSKeyFile() string
 }
 
 // PGConfig interface for PGConfig
 type PGConfig interface {
 	DSN() string
+}
+
+// GRPCAuthConfig interface for GRPCAuthConfig
+type GRPCAuthConfig interface {
+	Address() string
 }
