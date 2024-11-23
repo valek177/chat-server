@@ -13,6 +13,7 @@ import (
 	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
 	"github.com/valek177/chat-server/internal/config"
 	"github.com/valek177/chat-server/internal/interceptor"
+	"github.com/valek177/chat-server/internal/tracing"
 	"github.com/valek177/platform-common/pkg/closer"
 )
 
@@ -54,6 +55,7 @@ func (a *App) initDeps(ctx context.Context) error {
 	inits := []func(context.Context) error{
 		a.initConfig,
 		a.initServiceProvider,
+		a.initJaegerTracing,
 		a.initGRPCServer,
 	}
 
@@ -76,6 +78,15 @@ func (a *App) initConfig(_ context.Context) error {
 	}
 
 	return nil
+}
+
+func (a *App) initJaegerTracing(_ context.Context) error {
+	cfg, err := a.serviceProvider.JaegerConfig()
+	if err != nil {
+		return err
+	}
+
+	return tracing.Init(cfg)
 }
 
 func (a *App) initServiceProvider(_ context.Context) error {
@@ -103,7 +114,10 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 
 	a.grpcServer = grpc.NewServer(
 		grpc.Creds(creds),
-		grpc.ChainUnaryInterceptor(auth.Interceptor(ctx)),
+		grpc.ChainUnaryInterceptor(
+			interceptor.ServerTracingInterceptor,
+			auth.Interceptor(ctx),
+		),
 	)
 
 	reflection.Register(a.grpcServer)
