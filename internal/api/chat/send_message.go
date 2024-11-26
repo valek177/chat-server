@@ -13,7 +13,8 @@ import (
 func (i *Implementation) SendMessage(_ context.Context, req *chat_v1.SendMessageRequest) (
 	*emptypb.Empty, error,
 ) {
-	log.Printf("Send message from %s with text: %s", req.GetFrom(), req.GetText())
+	log.Printf("Send message from %s with text: %s",
+		req.GetMessage().GetFrom(), req.GetMessage().GetText())
 
 	return &emptypb.Empty{}, nil
 }

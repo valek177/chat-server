@@ -11,6 +11,7 @@ import (
 func (i *Implementation) CreateChat(ctx context.Context, req *chat_v1.CreateChatRequest) (
 	*chat_v1.CreateChatResponse, error,
 ) {
+	log.Printf("create chat api")
 	id, err := i.chatService.CreateChat(ctx, req)
 	if err != nil {
 		return nil, err
