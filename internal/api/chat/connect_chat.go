@@ -49,6 +49,8 @@ func (i *Implementation) ConnectChat(req *chat_v1.ConnectChatRequest, stream cha
 			i.chats[req.GetChatId()].m.Lock()
 			delete(i.chats[req.GetChatId()].streams, 1) // req.GetUsername())
 			i.chats[req.GetChatId()].m.Unlock()
+
+			log.Printf("context in connect chat is done")
 			return nil
 		}
 	}

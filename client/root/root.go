@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/brianvoe/gofakeit"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/valek177/auth/grpc/pkg/auth_v1"
 	"github.com/valek177/chat-server/client"
 	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
 )
@@ -147,6 +147,41 @@ var deleteUserCmd = &cobra.Command{
 	},
 }
 
+var sendMessageCmd = &cobra.Command{
+	Use:   "send",
+	Short: "Send message",
+	Run: func(cmd *cobra.Command, args []string) {
+		chatID, err := cmd.Flags().GetInt64("chat-id")
+		if err != nil {
+			log.Fatalf("failed to get flag chat-id: %s\n", err.Error())
+		}
+
+		message, err := cmd.Flags().GetString("message")
+		if err != nil {
+			log.Fatalf("failed to get flag message: %s\n", err.Error())
+		}
+
+		from, err := cmd.Flags().GetString("from")
+		if err != nil {
+			log.Fatalf("failed to get flag from: %s\n", err.Error())
+		}
+
+		c, err := client.NewChatV1Client()
+		if err != nil {
+			log.Fatalf("unable to create client")
+		}
+		defer c.Close()
+
+		// login to auth service; get token and use it for send message
+
+		err = sendMessage(cmd.Context(), c.C, from, chatID, message)
+		if err != nil {
+			log.Fatalf("failed to send message: %v", err)
+		}
+		log.Printf("was sended message")
+	},
+}
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
@@ -161,6 +196,7 @@ func init() {
 	rootCmd.AddCommand(deleteCmd)
 	rootCmd.AddCommand(connectChatCmd)
 	rootCmd.AddCommand(disconnectChatCmd)
+	rootCmd.AddCommand(sendMessageCmd)
 
 	createCmd.AddCommand(createChatCmd)
 	createCmd.AddCommand(createUserCmd)
@@ -193,6 +229,22 @@ func init() {
 	if err != nil {
 		log.Fatalf("failed to mark chat-id flag as required: %s\n", err.Error())
 	}
+
+	sendMessageCmd.Flags().Int64P("chat-id", "i", 0, "Chat ID")
+	err = sendMessageCmd.MarkFlagRequired("chat-id")
+	if err != nil {
+		log.Fatalf("failed to mark chat-id flag as required: %s\n", err.Error())
+	}
+	sendMessageCmd.Flags().StringP("message", "m", "", "Message text")
+	err = sendMessageCmd.MarkFlagRequired("message")
+	if err != nil {
+		log.Fatalf("failed to mark message flag as required: %s\n", err.Error())
+	}
+	sendMessageCmd.Flags().StringP("from", "f", "", "From")
+	err = sendMessageCmd.MarkFlagRequired("from")
+	if err != nil {
+		log.Fatalf("failed to mark from flag as required: %s\n", err.Error())
+	}
 }
 
 func connectChat(ctx context.Context, client chat_v1.ChatV1Client, chatID int64, username string, period time.Duration) error {
@@ -222,46 +274,7 @@ func connectChat(ctx context.Context, client chat_v1.ChatV1Client, chatID int64,
 			)
 		}
 	}()
-
-	for {
-		// Ниже пример того, как можно считывать сообщения из консоли
-		// в демонстрационных целях будем засылать в чат рандомный текст раз в 5 секунд
-		//scanner := bufio.NewScanner(os.Stdin)
-		//var lines strings.Builder
-		//
-		//for {
-		//	scanner.Scan()
-		//	line := scanner.Text()
-		//	if len(line) == 0 {
-		//		break
-		//	}
-		//
-		//	lines.WriteString(line)
-		//	lines.WriteString("\n")
-		//}
-		//
-		//err = scanner.Err()
-		//if err != nil {
-		//	log.Println("failed to scan message: ", err)
-		//}
-
-		time.Sleep(period)
-
-		text := gofakeit.Word()
-
-		_, err = client.SendMessage(ctx, &chat_v1.SendMessageRequest{
-			ChatId: chatID,
-			Message: &chat_v1.Message{
-				From:      username,
-				Text:      text,
-				CreatedAt: timestamppb.Now(),
-			},
-		})
-		if err != nil {
-			log.Println("failed to send message: ", err)
-			return err
-		}
-	}
+	return nil
 }
 
 func createChat(ctx context.Context, client chat_v1.ChatV1Client) (int64, error) {
@@ -273,4 +286,51 @@ func createChat(ctx context.Context, client chat_v1.ChatV1Client) (int64, error)
 	}
 
 	return res.GetId(), nil
+}
+
+func sendMessage(ctx context.Context, client chat_v1.ChatV1Client, from string, chatID int64, message string) error {
+	// for {
+	// Ниже пример того, как можно считывать сообщения из консоли
+	// в демонстрационных целях будем засылать в чат рандомный текст раз в 5 секунд
+	//scanner := bufio.NewScanner(os.Stdin)
+	//var lines strings.Builder
+	//
+	//for {
+	//	scanner.Scan()
+	//	line := scanner.Text()
+	//	if len(line) == 0 {
+	//		break
+	//	}
+	//
+	//	lines.WriteString(line)
+	//	lines.WriteString("\n")
+	//}
+	//
+	//err = scanner.Err()
+	//if err != nil {
+	//	log.Println("failed to scan message: ", err)
+	//}
+	// }
+	// text := gofakeit.Word()
+	authClient, err := auth_v1.AuthV1Client
+	if err != nil {
+		log.Fatalf("unable to create auth client for connect")
+	}
+	defer authClient.Close()
+	token, err := authClient.Login()
+
+	_, err = client.SendMessage(ctx, &chat_v1.SendMessageRequest{
+		ChatId: chatID,
+		Message: &chat_v1.Message{
+			From:      from,
+			Text:      message,
+			CreatedAt: timestamppb.Now(),
+		},
+	})
+	if err != nil {
+		log.Println("failed to send message: ", err)
+		return err
+	}
+
+	return nil
 }
