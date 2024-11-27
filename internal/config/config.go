@@ -30,3 +30,11 @@ type PGConfig interface {
 type GRPCAuthConfig interface {
 	Address() string
 }
+
+// JaegerConfig interface for jaeger config
+type JaegerConfig interface {
+	LocalAgentAddress() string
+	SamplerType() string
+	SamplerParam() float64
+	ServiceName() string
+}

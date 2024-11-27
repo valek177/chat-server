@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 
+	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -25,6 +27,7 @@ type serviceProvider struct {
 	pgConfig       config.PGConfig
 	grpcConfig     config.GRPCConfig
 	grpcAuthConfig config.GRPCAuthConfig
+	jaegerConfig   config.JaegerConfig
 
 	dbClient       db.Client
 	txManager      db.TxManager
@@ -84,6 +87,20 @@ func (s *serviceProvider) GRPCAuthConfig() (config.GRPCAuthConfig, error) {
 	}
 
 	return s.grpcAuthConfig, nil
+}
+
+// JaegerConfig returns jaeger config
+func (s *serviceProvider) JaegerConfig() (config.JaegerConfig, error) {
+	if s.jaegerConfig == nil {
+		cfg, err := env.NewJaegerConfig()
+		if err != nil {
+			return nil, err
+		}
+
+		s.jaegerConfig = cfg
+	}
+
+	return s.jaegerConfig, nil
 }
 
 // DBClient returns new db client
@@ -227,8 +244,13 @@ func (s *serviceProvider) AuthConnection() (*grpc.ClientConn, error) {
 		if err != nil {
 			return nil, err
 		}
-		conn, err := grpc.NewClient(grpcAuthCfg.Address(),
-			grpc.WithTransportCredentials(creds))
+		conn, err := grpc.NewClient(
+			grpcAuthCfg.Address(),
+			grpc.WithTransportCredentials(creds),
+			grpc.WithChainUnaryInterceptor(
+				otgrpc.OpenTracingClientInterceptor(opentracing.GlobalTracer()),
+			),
+		)
 		if err != nil {
 			return nil, err
 		}
