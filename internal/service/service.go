@@ -8,6 +8,8 @@ import (
 
 // ChatService is interface for chat on service
 type ChatService interface {
+	// ConnectChat(ctx context.Context, id int64, user_id int64) error //(chan *model.Message, error)
+	// SendMessage()
 	CreateChat(ctx context.Context, req *chat_v1.CreateChatRequest) (int64, error)
 	DeleteChat(ctx context.Context, id int64) error
 }

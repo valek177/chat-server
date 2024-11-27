@@ -23,13 +23,18 @@ var rootCmd = &cobra.Command{
 	Short: "Chat client app",
 }
 
-var createChatCmd = &cobra.Command{
+var createCmd = &cobra.Command{
 	Use:   "create",
+	Short: "Create object",
+}
+
+var createChatCmd = &cobra.Command{
+	Use:   "chat",
 	Short: "Create chat",
 	Run: func(cmd *cobra.Command, args []string) {
 		c, err := client.NewChatV1Client()
 		if err != nil {
-			log.Fatalf("unable to create client")
+			log.Fatalf("unable to create client for connect")
 		}
 		defer c.Close()
 
@@ -42,9 +47,29 @@ var createChatCmd = &cobra.Command{
 	},
 }
 
-var deleteChatCmd = &cobra.Command{
+var deleteCmd = &cobra.Command{
 	Use:   "delete",
+	Short: "Delete object",
+}
+
+var deleteChatCmd = &cobra.Command{
+	Use:   "chat",
 	Short: "Delete chat",
+
+	Run: func(cmd *cobra.Command, args []string) {
+		c, err := client.NewChatV1Client()
+		if err != nil {
+			log.Fatalf("unable to create client for connect")
+		}
+		defer c.Close()
+
+		// chatID, err := createChat(cmd.Context(), c.C)
+		// if err != nil {
+		// 	log.Fatalf("failed to connect chat: %v", err)
+		// }
+
+		// log.Printf("chat with id %d was deleted", chatID)
+	},
 }
 
 var connectChatCmd = &cobra.Command{
@@ -86,6 +111,14 @@ var connectChatCmd = &cobra.Command{
 var disconnectChatCmd = &cobra.Command{
 	Use:   "disconnect",
 	Short: "Disconnect from chat",
+	Run: func(cmd *cobra.Command, args []string) {
+		// usernamesStr, err := cmd.Flags().GetString("username")
+		// if err != nil {
+		// 	log.Fatalf("failed to get usernames: %s\n", err.Error())
+		// }
+
+		// log.Printf("user %s created\n", usernamesStr)
+	},
 }
 
 var createUserCmd = &cobra.Command{
@@ -124,7 +157,16 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.AddCommand(createChatCmd, deleteChatCmd, createUserCmd, deleteUserCmd)
+	rootCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(deleteCmd)
+	rootCmd.AddCommand(connectChatCmd)
+	rootCmd.AddCommand(disconnectChatCmd)
+
+	createCmd.AddCommand(createChatCmd)
+	createCmd.AddCommand(createUserCmd)
+
+	deleteCmd.AddCommand(deleteChatCmd)
+	deleteCmd.AddCommand(deleteUserCmd)
 
 	deleteChatCmd.Flags().Int64("chat-id", 0, "Chat ID")
 
@@ -138,6 +180,18 @@ func init() {
 	err = deleteUserCmd.MarkFlagRequired("username")
 	if err != nil {
 		log.Fatalf("failed to mark username flag as required: %s\n", err.Error())
+	}
+
+	connectChatCmd.Flags().StringP("username", "u", "", "User name")
+	err = connectChatCmd.MarkFlagRequired("username")
+	if err != nil {
+		log.Fatalf("failed to mark username flag as required: %s\n", err.Error())
+	}
+
+	connectChatCmd.Flags().Int64("chat-id", 0, "Chat ID")
+	err = connectChatCmd.MarkFlagRequired("chat-id")
+	if err != nil {
+		log.Fatalf("failed to mark chat-id flag as required: %s\n", err.Error())
 	}
 }
 
@@ -212,7 +266,7 @@ func connectChat(ctx context.Context, client chat_v1.ChatV1Client, chatID int64,
 
 func createChat(ctx context.Context, client chat_v1.ChatV1Client) (int64, error) {
 	res, err := client.CreateChat(ctx, &chat_v1.CreateChatRequest{
-		Name: "newchat", UserIds: []int64{1, 2},
+		Name: "newchat", UserIds: []int64{1, 2, 3, 4},
 	})
 	if err != nil {
 		return 0, err

@@ -3,7 +3,7 @@ package client
 import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
 )
@@ -16,13 +16,13 @@ type ChatV1Client struct {
 }
 
 func NewChatV1Client() (*ChatV1Client, error) {
-	creds, err := credentials.NewClientTLSFromFile("/home/valek/microservices_course/auth/tls/service.pem", "")
-	if err != nil {
-		return nil, err
-	}
+	// creds, err := credentials.NewClientTLSFromFile("/home/valek/microservices_course/auth/tls/service.pem", "")
+	// if err != nil {
+	// 	return nil, err
+	// }
 	conn, err := grpc.NewClient(
 		address,
-		grpc.WithTransportCredentials(creds),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
 		return nil, errors.WithStack(err)
