@@ -1,7 +1,7 @@
 package main
 
-import "github.com/valek177/chat-server/client/root"
+import "github.com/valek177/chat-server/client/internal/cmd"
 
 func main() {
-	root.Execute()
+	cmd.Execute()
 }

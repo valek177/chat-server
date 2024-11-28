@@ -40,6 +40,7 @@ func (i *Implementation) ConnectChat(req *chat_v1.ConnectChatRequest, stream cha
 			}
 
 			for _, st := range i.chats[req.GetChatId()].streams {
+				log.Println("we are sending message...")
 				if err := st.Send(msg); err != nil {
 					return err
 				}
