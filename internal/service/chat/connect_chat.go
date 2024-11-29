@@ -1,44 +1,61 @@
 package chat
 
-// func (i *Implementation) ConnectChat(req *desc.ConnectChatRequest, stream desc.ChatV1_ConnectChatServer) error {
-// 	i.mxChannel.RLock()
-// 	chatChan, ok := i.channels[req.GetChatId()]
-// 	i.mxChannel.RUnlock()
+import (
+	"context"
+	"log"
 
-// 	if !ok {
-// 		return status.Errorf(codes.NotFound, "chat not found")
-// 	}
+	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
 
-// 	i.mxChat.Lock()
-// 	if _, okChat := i.chats[req.GetChatId()]; !okChat {
-// 		i.chats[req.GetChatId()] = &Chat{
-// 			streams: make(map[string]desc.ChatV1_ConnectChatServer),
-// 		}
-// 	}
-// 	i.mxChat.Unlock()
+func (s *serv) ConnectChat(ctx context.Context, chatID int64, username string,
+	stream chat_v1.ChatV1_ConnectChatServer,
+) error {
+	// TODO move stream to api?
+	s.mxChannel.RLock()
+	chatChan, ok := s.channels[chatID]
+	s.mxChannel.RUnlock()
 
-// 	i.chats[req.GetChatId()].m.Lock()
-// 	i.chats[req.GetChatId()].streams[req.GetUsername()] = stream
-// 	i.chats[req.GetChatId()].m.Unlock()
+	if !ok {
+		return status.Errorf(codes.NotFound, "chat not found")
+	}
 
-// 	for {
-// 		select {
-// 		case msg, okCh := <-chatChan:
-// 			if !okCh {
-// 				return nil
-// 			}
+	s.mxChat.Lock()
+	// Create new chat in map if it doesnt exist
+	if _, okChat := s.chats[chatID]; !okChat {
+		s.chats[chatID] = &Chat{
+			userConnections: make(map[string]chat_v1.ChatV1_ConnectChatServer),
+		}
+	}
+	s.mxChat.Unlock()
 
-// 			for _, st := range i.chats[req.GetChatId()].streams {
-// 				if err := st.Send(msg); err != nil {
-// 					return err
-// 				}
-// 			}
+	s.chats[chatID].m.Lock()
+	s.chats[chatID].userConnections[username] = stream
+	s.chats[chatID].m.Unlock()
 
-// 		case <-stream.Context().Done():
-// 			i.chats[req.GetChatId()].m.Lock()
-// 			delete(i.chats[req.GetChatId()].streams, req.GetUsername())
-// 			i.chats[req.GetChatId()].m.Unlock()
-// 			return nil
-// 		}
-// 	}
-// }
+	for {
+		select {
+		case msg, okCh := <-chatChan:
+			if !okCh {
+				return nil
+			}
+
+			for k, st := range s.chats[chatID].userConnections {
+				log.Printf("we are sending message to %s connection to chat %d: %s",
+					k, chatID, msg)
+				if err := st.Send(msg); err != nil {
+					return err
+				}
+			}
+
+		case <-stream.Context().Done():
+			s.chats[chatID].m.Lock()
+			delete(s.chats[chatID].userConnections, username)
+			s.chats[chatID].m.Unlock()
+
+			log.Printf("context in connect chat is done")
+			return nil
+		}
+	}
+}

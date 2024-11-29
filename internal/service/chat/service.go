@@ -10,8 +10,8 @@ import (
 )
 
 type Chat struct {
-	streams map[string]chat_v1.ChatV1_ConnectChatServer
-	m       sync.RWMutex
+	userConnections map[string]chat_v1.ChatV1_ConnectChatServer
+	m               sync.RWMutex
 }
 
 type serv struct {

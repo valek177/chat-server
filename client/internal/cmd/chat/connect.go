@@ -73,28 +73,23 @@ func connectChat(ctx context.Context, client chat_v1.ChatV1Client, chatID int64,
 		return err
 	}
 
-	log.Println("stream ok", stream)
+	log.Println("Connected to chat", chatID)
 
-	go func() {
-		for {
-			log.Println("trying...")
-			message, errRecv := stream.Recv()
-			log.Println("trying...2")
-			if errRecv == io.EOF {
-				log.Println("error receive")
-				return
-			}
-			if errRecv != nil {
-				log.Println("failed to receive message from stream: ", errRecv)
-				return
-			}
-
-			log.Printf("[%v] - [from: %s]: %s\n",
-				color.YellowString(message.GetCreatedAt().AsTime().Format(time.RFC3339)),
-				color.BlueString(message.GetFrom()),
-				message.GetText(),
-			)
+	for {
+		message, errRecv := stream.Recv()
+		if errRecv == io.EOF {
+			log.Println("error receive")
+			return nil
 		}
-	}()
-	return nil
+		if errRecv != nil {
+			log.Println("failed to receive message from stream: ", errRecv)
+			return nil
+		}
+
+		log.Printf("[%v] - [from: %s]: %s\n",
+			color.YellowString(message.GetCreatedAt().AsTime().Format(time.RFC3339)),
+			color.BlueString(message.GetFrom()),
+			message.GetText(),
+		)
+	}
 }

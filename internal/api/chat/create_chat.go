@@ -19,8 +19,6 @@ func (i *Implementation) CreateChat(ctx context.Context, req *chat_v1.CreateChat
 
 	log.Printf("inserted chat with id: %d", id)
 
-	i.channels[id] = make(chan *chat_v1.Message, 100)
-
 	return &chat_v1.CreateChatResponse{
 		Id: id,
 	}, nil
