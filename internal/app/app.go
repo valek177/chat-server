@@ -95,16 +95,6 @@ func (a *App) initServiceProvider(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	// grpcCfg, err := a.serviceProvider.GRPCConfig()
-	// if err != nil {
-	// 	return err
-	// }
-
-	// creds, err := credentials.NewServerTLSFromFile(grpcCfg.TLSCertFile(), grpcCfg.TLSKeyFile())
-	// if err != nil {
-	// 	return err
-	// }
-
 	client, err := a.serviceProvider.AuthClient(ctx)
 	if err != nil {
 		return err

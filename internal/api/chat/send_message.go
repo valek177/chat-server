@@ -2,6 +2,7 @@ package chat
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -16,9 +17,14 @@ func (i *Implementation) SendMessage(ctx context.Context, req *chat_v1.SendMessa
 	log.Printf("Send message from %s with text: %s",
 		req.GetMessage().GetFrom(), req.GetMessage().GetText())
 
-	err := i.chatService.SendMessage(ctx, req.ChatId, req.Message)
+	chatID, err := i.chatService.GetChatIdByName(ctx, req.Chatname)
 	if err != nil {
-		log.Printf("error while sending message %v", err.Error())
+		return &emptypb.Empty{}, err
+	}
+
+	err = i.chatService.SendMessage(ctx, chatID, req.Message)
+	if err != nil {
+		return &emptypb.Empty{}, fmt.Errorf("error while sending message %v", err.Error())
 	}
 
 	return &emptypb.Empty{}, nil

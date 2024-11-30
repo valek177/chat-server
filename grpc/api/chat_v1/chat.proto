@@ -35,11 +35,11 @@ message DeleteChatRequest {
 }
 
 message ConnectChatRequest {
-  int64 chat_id = 1;
+  string chatname = 1;
   string username = 2;
 }
 
 message SendMessageRequest {
-  int64 chat_id = 1;
+  string chatname = 1;
   Message message = 2;
 }
