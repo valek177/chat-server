@@ -3,11 +3,13 @@ package chat
 import (
 	"context"
 
-	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
 )
 
+// ConnectChat connects to chat
 func (s *serv) ConnectChat(_ context.Context, chatID int64, username string,
 	stream chat_v1.ChatV1_ConnectChatServer,
 ) error {

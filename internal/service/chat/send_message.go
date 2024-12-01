@@ -3,9 +3,10 @@ package chat
 import (
 	"context"
 
-	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
 )
 
 // SendMessage sends message to chat
