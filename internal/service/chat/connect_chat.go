@@ -2,17 +2,15 @@ package chat
 
 import (
 	"context"
-	"log"
 
 	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (s *serv) ConnectChat(ctx context.Context, chatID int64, username string,
+func (s *serv) ConnectChat(_ context.Context, chatID int64, username string,
 	stream chat_v1.ChatV1_ConnectChatServer,
 ) error {
-	// TODO move stream to api?
 	s.mxChannel.RLock()
 	chatChan, ok := s.channels[chatID]
 	s.mxChannel.RUnlock()
@@ -41,9 +39,7 @@ func (s *serv) ConnectChat(ctx context.Context, chatID int64, username string,
 				return nil
 			}
 
-			for k, st := range s.chats[chatID].userConnections {
-				log.Printf("we are sending message to %s connection to chat %d: %s",
-					k, chatID, msg)
+			for _, st := range s.chats[chatID].userConnections {
 				if err := st.Send(msg); err != nil {
 					return err
 				}
@@ -54,7 +50,6 @@ func (s *serv) ConnectChat(ctx context.Context, chatID int64, username string,
 			delete(s.chats[chatID].userConnections, username)
 			s.chats[chatID].m.Unlock()
 
-			log.Printf("context in connect chat is done")
 			return nil
 		}
 	}

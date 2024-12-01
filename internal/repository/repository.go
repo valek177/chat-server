@@ -9,7 +9,7 @@ import (
 
 // ChatRepository is interface for chat logic
 type ChatRepository interface {
-	GetChatIdByName(ctx context.Context, chatname string) (int64, error)
+	GetChatIDByName(ctx context.Context, chatname string) (int64, error)
 	CreateChat(ctx context.Context, req *chat_v1.CreateChatRequest) (int64, error)
 	DeleteChat(ctx context.Context, id int64) error
 }

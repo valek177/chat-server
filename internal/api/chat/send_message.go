@@ -17,7 +17,7 @@ func (i *Implementation) SendMessage(ctx context.Context, req *chat_v1.SendMessa
 	log.Printf("Send message from %s with text: %s",
 		req.GetMessage().GetFrom(), req.GetMessage().GetText())
 
-	chatID, err := i.chatService.GetChatIdByName(ctx, req.Chatname)
+	chatID, err := i.chatService.GetChatIDByName(ctx, req.Chatname)
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}

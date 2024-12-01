@@ -8,7 +8,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *serv) SendMessage(ctx context.Context, chatID int64, message *chat_v1.Message) error {
+// SendMessage sends message to chat
+func (s *serv) SendMessage(_ context.Context, chatID int64, message *chat_v1.Message) error {
 	s.mxChannel.RLock()
 	chatChan, ok := s.channels[chatID]
 	s.mxChannel.RUnlock()

@@ -6,13 +6,13 @@ import (
 	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
 )
 
+// ConnectChat connects user to chat
 func (i *Implementation) ConnectChat(req *chat_v1.ConnectChatRequest,
 	stream chat_v1.ChatV1_ConnectChatServer,
 ) error {
-	// check user can connect to this chat (permissions)
-	log.Print("we are connecting to chat", req.Chatname, req.Username)
+	log.Printf("User %s connecting to chat %s", req.Username, req.Chatname)
 
-	chatID, err := i.chatService.GetChatIdByName(stream.Context(), req.Chatname)
+	chatID, err := i.chatService.GetChatIDByName(stream.Context(), req.Chatname)
 	if err != nil {
 		return err
 	}

@@ -61,7 +61,8 @@ func (r *repo) DeleteChat(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (r *repo) GetChatIdByName(ctx context.Context, chatname string) (int64, error) {
+// GetChatIDByName returns chat id by name
+func (r *repo) GetChatIDByName(ctx context.Context, chatname string) (int64, error) {
 	builderSelect := sq.Select(idColumn).
 		From(tableChatsName).
 		PlaceholderFormat(sq.Dollar).
@@ -73,13 +74,13 @@ func (r *repo) GetChatIdByName(ctx context.Context, chatname string) (int64, err
 	}
 
 	q := db.Query{
-		Name:     "chat_repository.GetChatIdByName",
+		Name:     "chat_repository.GetChatIDByName",
 		QueryRaw: query,
 	}
 
 	var chatID int64
 
-	err = r.db.DB().ScanAllContext(ctx, &chatID, q, args...)
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&chatID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return 0, errors.New("chat IDs not found")

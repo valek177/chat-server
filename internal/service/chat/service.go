@@ -9,6 +9,7 @@ import (
 	"github.com/valek177/platform-common/pkg/client/db"
 )
 
+// Chat is a struct for chat object
 type Chat struct {
 	userConnections map[string]chat_v1.ChatV1_ConnectChatServer
 	m               sync.RWMutex
