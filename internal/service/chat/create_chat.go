@@ -30,5 +30,7 @@ func (s *serv) CreateChat(ctx context.Context, req *chat_v1.CreateChatRequest) (
 		return 0, err
 	}
 
+	s.channels[id] = make(chan *chat_v1.Message, 100)
+
 	return id, nil
 }

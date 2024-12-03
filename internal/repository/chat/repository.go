@@ -2,8 +2,10 @@ package chat
 
 import (
 	"context"
+	"errors"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v4"
 
 	"github.com/valek177/chat-server/grpc/pkg/chat_v1"
 	"github.com/valek177/chat-server/internal/repository"
@@ -57,6 +59,36 @@ func (r *repo) DeleteChat(ctx context.Context, id int64) error {
 	}
 
 	return nil
+}
+
+// GetChatIDByName returns chat id by name
+func (r *repo) GetChatIDByName(ctx context.Context, chatname string) (int64, error) {
+	builderSelect := sq.Select(idColumn).
+		From(tableChatsName).
+		PlaceholderFormat(sq.Dollar).
+		Where(sq.Eq{nameColumn: chatname})
+
+	query, args, err := builderSelect.ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	q := db.Query{
+		Name:     "chat_repository.GetChatIDByName",
+		QueryRaw: query,
+	}
+
+	var chatID int64
+
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&chatID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, errors.New("chat IDs not found")
+		}
+		return 0, err
+	}
+
+	return chatID, nil
 }
 
 func (r *repo) createNewChat(ctx context.Context, req *chat_v1.CreateChatRequest) (int64, error) {
